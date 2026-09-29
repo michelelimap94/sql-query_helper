@@ -997,3 +997,616 @@ function renderHaving() {
       </select>` : ''}
     </div>
   `).join('') || '<p class="hint">Nenhuma condição adicionada.</p>';
+
+  bindConditionRows(list, state.having, renderHaving, true);
+}
+
+function bindConditionRows(list, arr, rerender, isHaving) {
+  list.querySelectorAll('.item-row').forEach(rowEl => {
+    const id = rowEl.dataset.id;
+    const row = arr.find(r => r.id === id);
+    ['column','operator','value','connector','func'].forEach(field => {
+      const el = rowEl.querySelector(`[data-field="${field}"]`);
+      if (!el) return;
+      const evt = field === 'value' ? 'input' : 'change';
+      el.addEventListener(evt, e => {
+        row[field] = e.target.value;
+        if (field === 'func' && row.func === 'COUNT_STAR') row.column = '*';
+        if (field === 'operator' || field === 'func') rerender();
+        renderQuery();
+      });
+    });
+    rowEl.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      const filtered = arr.filter(r => r.id !== id);
+      arr.length = 0; arr.push(...filtered);
+      rerender(); renderQuery();
+    });
+  });
+}
+
+document.getElementById('btn-add-where').addEventListener('click', () => {
+  state.where.push({ id: uid(), column: '', operator: '=', value: '', connector: 'AND' });
+  renderWhere(); renderQuery();
+});
+document.getElementById('btn-add-having').addEventListener('click', () => {
+  state.having.push({ id: uid(), func: '', column: '', operator: '>', value: '', connector: 'AND' });
+  renderHaving(); renderQuery();
+});
+
+/* -------------------------------------------------------------------- *
+ * 8. RENDER — GROUP BY
+ * -------------------------------------------------------------------- */
+
+function renderGroupBy() {
+  const list = document.getElementById('groupby-list');
+  const cols = availableColumns();
+  list.innerHTML = state.groupBy.map(row => {
+    const showAgrupamento = isDateColumn(row.column);
+    const df = dateFuncByValue(row.agrupamento);
+    return `
+    <div class="select-item">
+      <div class="item-row" data-id="${row.id}">
+        <select data-field="column">${selectOptionsHTML(cols, row.column, 'coluna…')}</select>
+        ${showAgrupamento ? `
+        <select class="fn-select" data-field="agrupamento">
+          <option value="" ${!row.agrupamento?'selected':''}>Sem transformação</option>
+          ${DATE_FUNCS.map(d => `<option value="${d.value}" ${d.value===row.agrupamento?'selected':''}>${d.label}</option>`).join('')}
+        </select>` : ''}
+        <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      ${df ? `<p class="tip date-func-hint"><i class="fa-regular fa-calendar"></i> <b>${df.label}:</b> ${df.hint}</p>` : ''}
+    </div>`;
+  }).join('') || '<p class="hint">Nenhuma coluna de agrupamento adicionada.</p>';
+
+  list.querySelectorAll('.item-row').forEach(rowEl => {
+    const id = rowEl.dataset.id;
+    const row = state.groupBy.find(r => r.id === id);
+    rowEl.querySelector('[data-field="column"]').addEventListener('change', e => {
+      row.column = e.target.value;
+      if (row.agrupamento && !isDateColumn(row.column)) row.agrupamento = '';
+      renderGroupBy(); renderQuery();
+    });
+    const agSel = rowEl.querySelector('[data-field="agrupamento"]');
+    if (agSel) agSel.addEventListener('change', e => { row.agrupamento = e.target.value; renderGroupBy(); renderQuery(); });
+    rowEl.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      state.groupBy = state.groupBy.filter(r => r.id !== id);
+      renderGroupBy(); renderQuery();
+    });
+  });
+}
+
+document.getElementById('btn-add-groupby').addEventListener('click', () => {
+  state.groupBy.push({ id: uid(), column: '', agrupamento: '' });
+  renderGroupBy(); renderQuery();
+});
+
+function groupByFragment(row) {
+  if (!row.column) return '';
+  const df = dateFuncByValue(row.agrupamento);
+  return df ? df.wrap(row.column) : row.column;
+}
+
+/* -------------------------------------------------------------------- *
+ * 9. RENDER — ORDER BY
+ * -------------------------------------------------------------------- */
+
+function renderOrderBy() {
+  const list = document.getElementById('orderby-list');
+  const cols = orderableOptions();
+  list.innerHTML = state.orderBy.map(row => `
+    <div class="item-row" data-id="${row.id}">
+      <select data-field="column">${selectOptionsHTML(cols, row.column, 'coluna ou alias…')}</select>
+      <select class="fn-select" data-field="direction">
+        <option value="ASC" ${row.direction==='ASC'?'selected':''}>ASC</option>
+        <option value="DESC" ${row.direction==='DESC'?'selected':''}>DESC</option>
+      </select>
+      <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  `).join('') || '<p class="hint">Nenhuma ordenação adicionada.</p>';
+
+  list.querySelectorAll('.item-row').forEach(rowEl => {
+    const id = rowEl.dataset.id;
+    const row = state.orderBy.find(r => r.id === id);
+    rowEl.querySelector('[data-field="column"]').addEventListener('change', e => { row.column = e.target.value; renderQuery(); });
+    rowEl.querySelector('[data-field="direction"]').addEventListener('change', e => { row.direction = e.target.value; renderQuery(); });
+    rowEl.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      state.orderBy = state.orderBy.filter(r => r.id !== id);
+      renderOrderBy(); renderQuery();
+    });
+  });
+}
+
+document.getElementById('btn-add-orderby').addEventListener('click', () => {
+  state.orderBy.push({ id: uid(), column: '', direction: 'DESC' });
+  renderOrderBy(); renderQuery();
+});
+
+/* -------------------------------------------------------------------- *
+ * 10. DEMANDA / LIMIT
+ * -------------------------------------------------------------------- */
+
+document.getElementById('input-demanda').addEventListener('input', e => { state.demanda = e.target.value; });
+document.getElementById('input-limit').addEventListener('input', e => { state.limit = e.target.value; renderQuery(); });
+
+/* -------------------------------------------------------------------- *
+ * 11. MONTAGEM DA QUERY
+ * -------------------------------------------------------------------- */
+
+function selectFragment(row) {
+  if (!row.func) return row.column || '';
+  if (row.func === 'COUNT_STAR') return 'COUNT(*)';
+  if (row.func === 'COUNT_DISTINCT') return `COUNT(DISTINCT ${row.column || ''})`;
+  const df = dateFuncByValue(row.func);
+  if (df) return df.wrap(row.column || '');
+  return `${row.func}(${row.column || ''})`;
+}
+
+function conditionFragment(row) {
+  if (!row.column) return '';
+  if (row.operator === 'IS NULL' || row.operator === 'IS NOT NULL') return `${row.column} ${row.operator}`;
+  if (row.operator === 'IN' || row.operator === 'NOT IN') {
+    const vals = (row.value || '').split(',').map(v => v.trim()).filter(Boolean).join(', ');
+    return `${row.column} ${row.operator} (${vals})`;
+  }
+  return `${row.column} ${row.operator} ${row.value || ''}`.trim();
+}
+
+function havingFragment(row) {
+  let left = row.column || '';
+  if (row.func === 'COUNT_STAR') left = 'COUNT(*)';
+  else if (row.func === 'COUNT_DISTINCT') left = `COUNT(DISTINCT ${left})`;
+  else if (row.func) left = `${row.func}(${left})`;
+  if (!left) return '';
+  return `${left} ${row.operator} ${row.value || ''}`.trim();
+}
+
+function buildQueryLines() {
+  const lines = [];
+
+  // SELECT
+  const selectParts = state.select
+    .filter(r => r.func === 'COUNT_STAR' || r.column)
+    .map(r => {
+      let frag = selectFragment(r);
+      if (r.alias) frag += ` AS ${r.alias}`;
+      return frag;
+    });
+  lines.push({ kw: 'SELECT', body: selectParts.length ? selectParts.join(',\n    ') : '*' , indent: true});
+
+  // FROM
+  if (state.from && database[state.from]) {
+    const aliases = computeAliases();
+    const hasJoins = state.joins.some(j => j.table);
+    const fromStr = hasJoins ? `${state.from} ${aliases[state.from]}` : state.from;
+    lines.push({ kw: 'FROM', body: fromStr });
+  }
+
+  // JOIN
+  const aliases = computeAliases();
+  state.joins.forEach(j => {
+    if (!j.table) return;
+    const jAlias = aliases[j.table];
+    const mAlias = aliases[state.from];
+    const cond = (j.colMain && j.colJoin) ? `\n    ON ${mAlias}.${j.colMain} = ${jAlias}.${j.colJoin}` : '';
+    lines.push({ raw: `${j.type} ${j.table} ${jAlias}${cond}` });
+  });
+
+  // WHERE
+  const whereFrags = state.where.filter(r => r.column).map(conditionFragment).filter(Boolean);
+  if (whereFrags.length) {
+    let body = whereFrags[0];
+    for (let i = 1; i < whereFrags.length; i++) {
+      body += `\n    ${state.where[i-1].connector || 'AND'} ${whereFrags[i]}`;
+    }
+    lines.push({ kw: 'WHERE', body });
+  }
+
+  // GROUP BY
+  const groupCols = state.groupBy.map(groupByFragment).filter(Boolean);
+  if (groupCols.length) lines.push({ kw: 'GROUP BY', body: groupCols.join(', ') });
+
+  // HAVING
+  const havingFrags = state.having.filter(r => r.column).map(havingFragment).filter(Boolean);
+  if (havingFrags.length) {
+    let body = havingFrags[0];
+    for (let i = 1; i < havingFrags.length; i++) {
+      body += `\n    ${state.having[i-1].connector || 'AND'} ${havingFrags[i]}`;
+    }
+    lines.push({ kw: 'HAVING', body });
+  }
+
+  // ORDER BY
+  const orderFrags = state.orderBy.filter(r => r.column).map(r => `${r.column} ${r.direction}`);
+  if (orderFrags.length) lines.push({ kw: 'ORDER BY', body: orderFrags.join(', ') });
+
+  // LIMIT
+  if (state.limit) lines.push({ kw: 'LIMIT', body: state.limit });
+
+  return lines;
+}
+
+function buildQueryString() {
+  const lines = buildQueryLines();
+  return lines.map(l => l.raw ? l.raw : (l.indent ? `${l.kw}\n    ${l.body}` : `${l.kw} ${l.body}`)).join('\n') + ';';
+}
+
+function renderQuery() {
+  const lines = buildQueryLines();
+  const hasContent = state.select.length || state.from;
+  const out = document.getElementById('query-output');
+  if (!hasContent) {
+    out.textContent = '-- monte sua consulta usando os blocos ao lado';
+  } else {
+    const text = lines.map(l => {
+      if (l.raw) return l.raw.replace(/^(\S+ ?\S*)/, m => `<span class="kw">${m}</span>`);
+      const kwHtml = `<span class="kw">${l.kw}</span>`;
+      return l.indent ? `${kwHtml}\n    ${l.body}` : `${kwHtml} ${l.body}`;
+    }).join('\n') + ';';
+    out.innerHTML = text;
+  }
+  updateOrderChain();
+  renderWarnings();
+}
+
+function updateOrderChain() {
+  const filled = {
+    select: state.select.some(r => r.column || r.func === 'COUNT_STAR'),
+    from: !!state.from,
+    join: state.joins.some(j => j.table),
+    where: state.where.some(r => r.column),
+    groupby: state.groupBy.some(r => r.column),
+    having: state.having.some(r => r.column),
+    orderby: state.orderBy.some(r => r.column),
+    limit: !!state.limit,
+  };
+  document.querySelectorAll('#order-chain li').forEach(li => {
+    li.classList.toggle('is-filled', !!filled[li.dataset.step]);
+  });
+}
+
+/* -------------------------------------------------------------------- *
+ * 12. VALIDAÇÕES DIDÁTICAS
+ * -------------------------------------------------------------------- */
+
+const TEXTY_HINTS = /NOME|DESCRI|EMPRESA|STATUS|TIPO|OBSERVA|ENDERE|CIDADE|ESTADO|^UF$|PAIS|empresa$/i;
+
+function renderWarnings() {
+  const box = document.getElementById('warnings');
+  const warnings = [];
+
+  const hasAgg = state.select.some(r => r.func);
+  const hasPlainCol = state.select.some(r => !r.func && r.column);
+  if (hasAgg && hasPlainCol && state.groupBy.filter(r=>r.column).length === 0) {
+    warnings.push('Você está usando uma função de agregação junto com outra coluna. Talvez seja necessário adicionar essa coluna ao GROUP BY.');
+  }
+
+  if (state.having.some(r => r.column) && state.groupBy.filter(r=>r.column).length === 0) {
+    warnings.push('Você preencheu o HAVING sem definir um GROUP BY. O HAVING normalmente filtra resultados já agrupados.');
+  }
+
+  state.select.forEach(r => {
+    if ((r.func === 'SUM' || r.func === 'AVG') && r.column && TEXTY_HINTS.test(r.column)) {
+      warnings.push(`"${r.column}" parece ser uma coluna textual — SUM/AVG geralmente são usados em colunas numéricas.`);
+    }
+  });
+
+  let html = warnings.map(w => `<div class="warning-item"><i class="fa-solid fa-triangle-exclamation"></i><span>${escapeHtml(w)}</span></div>`).join('');
+
+  const suggestion = computeDateGroupBySuggestion();
+  if (suggestion) {
+    html += `<div class="warning-item"><i class="fa-solid fa-calendar-days"></i><span>${escapeHtml(suggestion.text)}<br><button class="btn-suggestion" id="btn-apply-date-groupby">Adicionar ao GROUP BY</button></span></div>`;
+  }
+
+  box.innerHTML = html;
+  if (suggestion) {
+    document.getElementById('btn-apply-date-groupby').addEventListener('click', suggestion.apply);
+  }
+}
+
+// Sugere adicionar a coluna de data (com a mesma transformação usada no SELECT) ao GROUP BY
+function computeDateGroupBySuggestion() {
+  const dateRow = state.select.find(r => dateFuncByValue(r.func) && r.column);
+  if (!dateRow) return null;
+  const hasAgg = state.select.some(r => r !== dateRow && r.func && !dateFuncByValue(r.func));
+  if (!hasAgg) return null;
+  const already = state.groupBy.some(g => g.column === dateRow.column && g.agrupamento === dateRow.func);
+  if (already) return null;
+  const df = dateFuncByValue(dateRow.func);
+  const periodo = { DATE_DIA: 'diariamente', DATE_MES: 'por mês', DATE_ANO: 'por ano', DATE_ANOMES: 'por mês' }[dateRow.func] || '';
+  return {
+    text: `Você está calculando resultados ${periodo}. Adicione ${dateRow.column} como ${df.label} ao GROUP BY para separar os cálculos corretamente. `,
+    apply: () => {
+      state.groupBy.push({ id: uid(), column: dateRow.column, agrupamento: dateRow.func });
+      renderGroupBy(); renderQuery();
+    }
+  };
+}
+
+/* -------------------------------------------------------------------- *
+ * 13. EXPLICAÇÃO DA QUERY
+ * -------------------------------------------------------------------- */
+
+function renderExplanation() {
+  const box = document.getElementById('explanation');
+  const lines = [];
+
+  state.select.forEach(r => {
+    if (!r.column && r.func !== 'COUNT_STAR') return;
+    const frag = selectFragment(r);
+    let text;
+    if (r.func === 'COUNT_STAR') text = 'Conta o número total de linhas do resultado.';
+    else if (r.func === 'COUNT_DISTINCT') text = `Conta quantos valores diferentes existem em ${r.column}, sem repetição.`;
+    else if (r.func === 'COUNT') text = `Conta os registros da coluna ${r.column}.`;
+    else if (r.func === 'SUM') text = `Soma todos os valores da coluna ${r.column}.`;
+    else if (r.func === 'AVG') text = `Calcula a média dos valores de ${r.column}.`;
+    else if (r.func === 'MIN') text = `Retorna o menor valor de ${r.column}.`;
+    else if (r.func === 'MAX') text = `Retorna o maior valor de ${r.column}.`;
+    else if (dateFuncByValue(r.func)) text = dateFuncByValue(r.func).hint;
+    else text = `Exibe o valor da coluna ${r.column}.`;
+    lines.push({ code: r.alias ? `${frag} AS ${r.alias}` : frag, text });
+  });
+
+  if (state.from) {
+    lines.push({ code: `FROM ${state.from}`, text: `Busca os dados na tabela ${state.from}${database[state.from] ? ' — ' + database[state.from].descricao.replace(/\.$/,'').toLowerCase() : ''}.` });
+  }
+
+  state.joins.forEach(j => {
+    if (!j.table) return;
+    const verbo = j.type === 'LEFT JOIN' ? 'Mantém todos os registros da tabela principal e traz o que existir' : 'Traz apenas os registros que existem';
+    lines.push({ code: `${j.type} ${j.table}`, text: `${verbo} também em ${j.table}, cruzando pela coluna informada.` });
+  });
+
+  const whereFrags = state.where.filter(r => r.column).map(conditionFragment).filter(Boolean);
+  if (whereFrags.length) {
+    lines.push({ code: `WHERE ${whereFrags.join(' ... ')}`, text: 'Mantém somente as linhas que atendem a essa(s) condição(ões), antes de qualquer agrupamento.' });
+  }
+
+  const groupCols = state.groupBy.map(groupByFragment).filter(Boolean);
+  if (groupCols.length) {
+    lines.push({ code: `GROUP BY ${groupCols.join(', ')}`, text: `Separa os resultados em grupos por ${groupCols.join(', ')}.` });
+  }
+
+  const havingFrags = state.having.filter(r => r.column).map(havingFragment).filter(Boolean);
+  if (havingFrags.length) {
+    lines.push({ code: `HAVING ${havingFrags.join(' ... ')}`, text: 'Filtra os grupos já calculados, mantendo apenas os que atendem a essa condição.' });
+  }
+
+  const orderFrags = state.orderBy.filter(r => r.column);
+  if (orderFrags.length) {
+    lines.push({ code: `ORDER BY ${orderFrags.map(r=>`${r.column} ${r.direction}`).join(', ')}`, text: `Ordena o resultado ${orderFrags.map(r=> r.direction === 'DESC' ? 'do maior para o menor' : 'do menor para o maior').join(' e ')}.` });
+  }
+
+  if (state.limit) {
+    lines.push({ code: `LIMIT ${state.limit}`, text: `Retorna apenas as primeiras ${state.limit} linhas do resultado.` });
+  }
+
+  if (!lines.length) {
+    box.innerHTML = '<p class="hint">Monte sua query nos blocos ao lado para ver a explicação aqui.</p>';
+  } else {
+    box.innerHTML = lines.map(l => `<div class="line"><b>${escapeHtml(l.code)}</b><p>→ ${escapeHtml(l.text)}</p></div>`).join('');
+  }
+  box.hidden = false;
+}
+
+document.getElementById('btn-explain').addEventListener('click', renderExplanation);
+
+/* -------------------------------------------------------------------- *
+ * 14. COPIAR / LIMPAR
+ * -------------------------------------------------------------------- */
+
+document.getElementById('btn-copy').addEventListener('click', () => {
+  const text = buildQueryString();
+  navigator.clipboard?.writeText(text).catch(() => {});
+  const btn = document.getElementById('btn-copy');
+  const original = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+  setTimeout(() => { btn.innerHTML = original; }, 1200);
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (!confirm('Limpar toda a query e recomeçar?')) return;
+  Object.assign(state, { demanda:'', select:[], from:'', joins:[], where:[], groupBy:[], having:[], orderBy:[], limit:'' });
+  document.getElementById('input-demanda').value = '';
+  document.getElementById('input-limit').value = '';
+  document.getElementById('explanation').hidden = true;
+  renderAll(['select','from','join','where','groupby','having','orderby']);
+});
+
+/* -------------------------------------------------------------------- *
+ * 15. GUIA DE FUNÇÕES SQL (cards)
+ * -------------------------------------------------------------------- */
+
+const FUNCTION_CARDS = [
+  { nome: 'COUNT', serve: 'Contar quantidade de linhas.', sintaxe: 'COUNT(coluna)', exemplo: 'COUNT(CLIENTE_ID)', leia: 'Conte os registros da coluna CLIENTE_ID.' },
+  { nome: 'COUNT DISTINCT', serve: 'Contar valores únicos, sem repetição.', sintaxe: 'COUNT(DISTINCT coluna)', exemplo: 'COUNT(DISTINCT CLIENTE_ID)', leia: 'Conte quantos clientes diferentes existem.' },
+  { nome: 'SUM', serve: 'Somar valores numéricos.', sintaxe: 'SUM(coluna)', exemplo: 'SUM(VALOR_TOTAL)', leia: 'Some os valores da coluna VALOR_TOTAL.' },
+  { nome: 'AVG', serve: 'Calcular a média de valores numéricos.', sintaxe: 'AVG(coluna)', exemplo: 'AVG(VALOR_TOTAL)', leia: 'Calcule o valor médio dos pedidos.' },
+  { nome: 'MIN', serve: 'Encontrar o menor valor.', sintaxe: 'MIN(coluna)', exemplo: 'MIN(VALOR_TOTAL)', leia: 'Retorne o menor valor de VALOR_TOTAL.' },
+  { nome: 'MAX', serve: 'Encontrar o maior valor.', sintaxe: 'MAX(coluna)', exemplo: 'MAX(VALOR_TOTAL)', leia: 'Retorne o maior valor de VALOR_TOTAL.' },
+  { nome: 'DISTINCT', serve: 'Remover valores duplicados do resultado.', sintaxe: 'SELECT DISTINCT coluna', exemplo: 'SELECT DISTINCT CANAL', leia: 'Liste cada canal uma única vez.' },
+  { nome: 'IN', serve: 'Filtrar valores dentro de uma lista.', sintaxe: 'coluna IN (valor1, valor2, ...)', exemplo: "CANAL IN ('Digital', 'Loja')", leia: 'Mantenha apenas os canais escolhidos.' },
+  { nome: 'BETWEEN', serve: 'Filtrar valores dentro de um intervalo.', sintaxe: 'coluna BETWEEN valor1 AND valor2', exemplo: "DATA_PEDIDO BETWEEN '2026-09-01' AND '2026-09-30'", leia: 'Mantenha os pedidos dentro do período informado.' },
+  { nome: 'LIKE', serve: 'Filtrar por um padrão de texto.', sintaxe: "coluna LIKE '%padrão%'", exemplo: "PRODUTO LIKE '%Pro%'", leia: 'Mantenha produtos que contenham o padrão informado.' },
+  { nome: 'AND', serve: 'Exigir que todas as condições sejam verdadeiras.', sintaxe: 'condição1 AND condição2', exemplo: "CANAL = 'Digital' AND VALOR_TOTAL > 100", leia: 'As duas condições precisam ser verdadeiras.' },
+  { nome: 'OR', serve: 'Exigir que ao menos uma condição seja verdadeira.', sintaxe: 'condição1 OR condição2', exemplo: "CANAL = 'Digital' OR CANAL = 'Loja'", leia: 'Basta uma das condições ser verdadeira.' },
+  { nome: 'IS NULL', serve: 'Encontrar valores vazios/nulos.', sintaxe: 'coluna IS NULL', exemplo: 'STATUS IS NULL', leia: 'Mantenha registros sem valor preenchido.' },
+  { nome: 'IS NOT NULL', serve: 'Encontrar valores preenchidos.', sintaxe: 'coluna IS NOT NULL', exemplo: 'STATUS IS NOT NULL', leia: 'Mantenha registros com valor preenchido.' },
+];
+
+function renderFunctionCards() {
+  const grid = document.getElementById('functions-grid');
+  grid.innerHTML = FUNCTION_CARDS.map(f => `
+    <div class="fn-card">
+      <h3>${f.nome}</h3>
+      <p class="fn-desc"><b>Serve para:</b> ${f.serve}</p>
+      <div class="fn-syntax">${escapeHtml(f.sintaxe)}</div>
+      <p class="fn-example"><b>Exemplo:</b> <code>${escapeHtml(f.exemplo)}</code></p>
+      <p class="fn-read">"${f.leia}"</p>
+    </div>
+  `).join('');
+}
+
+/* -------------------------------------------------------------------- *
+ * 16. EXEMPLOS PRONTOS
+ * -------------------------------------------------------------------- */
+
+function makeExampleState(overrides) {
+  return Object.assign({ demanda:'', select:[], from:'', joins:[], where:[], groupBy:[], having:[], orderBy:[], limit:'' }, overrides);
+}
+
+const EXAMPLES = [
+  {
+    titulo: '1. Consulta simples',
+    desc: 'Exibir colunas específicas de uma tabela, sem cálculos.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'CLIENTE_ID', func: '', alias: '' }, { id: uid(), column: 'SEGMENTO', func: '', alias: '' }],
+      from: 'clientes',
+      limit: '10',
+    })
+  },
+  {
+    titulo: '2. COUNT DISTINCT',
+    desc: 'Contar quantos clientes únicos aparecem na base de pedidos.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'CLIENTE_ID', func: 'COUNT_DISTINCT', alias: 'qtd_clientes' }],
+      from: 'pedidos',
+    })
+  },
+  {
+    titulo: '3. SUM',
+    desc: 'Somar o valor total dos pedidos.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'VALOR_TOTAL', func: 'SUM', alias: 'receita_total' }],
+      from: 'pedidos',
+    })
+  },
+  {
+    titulo: '4. WHERE com IN',
+    desc: 'Filtrar pedidos realizados em canais específicos.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: '*', func: '', alias: '' }],
+      from: 'pedidos',
+      where: [{ id: uid(), column: 'CANAL', operator: 'IN', value: "'Digital', 'Loja'", connector: 'AND' }],
+    })
+  },
+  {
+    titulo: '5. GROUP BY',
+    desc: 'Separar a receita por canal de venda.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'CANAL', func: '', alias: '' }, { id: uid(), column: 'VALOR_TOTAL', func: 'SUM', alias: 'receita' }],
+      from: 'pedidos',
+      groupBy: [{ id: uid(), column: 'CANAL' }],
+    })
+  },
+  {
+    titulo: '6. HAVING',
+    desc: 'Manter apenas os canais com receita superior a R$ 10.000.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'CANAL', func: '', alias: '' }, { id: uid(), column: 'VALOR_TOTAL', func: 'SUM', alias: 'receita' }],
+      from: 'pedidos',
+      groupBy: [{ id: uid(), column: 'CANAL' }],
+      having: [{ id: uid(), func: 'SUM', column: 'VALOR_TOTAL', operator: '>', value: '10000', connector: 'AND' }],
+    })
+  },
+  {
+    titulo: '7. JOIN',
+    desc: 'Trazer o segmento do cliente junto com seus pedidos.',
+    state: () => makeExampleState({
+      select: [{ id: uid(), column: 'p.PEDIDO_ID', func: '', alias: '' }, { id: uid(), column: 'c.SEGMENTO', func: '', alias: '' }],
+      from: 'pedidos',
+      joins: [{ id: uid(), type: 'LEFT JOIN', table: 'clientes', colMain: 'CLIENTE_ID', colJoin: 'CLIENTE_ID' }],
+    })
+  },
+  {
+    titulo: '8. Combinado',
+    desc: 'Clientes distintos, receita e ticket médio por canal.',
+    state: () => makeExampleState({
+      select: [
+        { id: uid(), column: 'CANAL', func: '', alias: '' },
+        { id: uid(), column: 'CLIENTE_ID', func: 'COUNT_DISTINCT', alias: 'qtd_clientes' },
+        { id: uid(), column: 'VALOR_TOTAL', func: 'SUM', alias: 'receita_total' },
+        { id: uid(), column: 'VALOR_TOTAL', func: 'AVG', alias: 'ticket_medio' },
+      ],
+      from: 'pedidos',
+      groupBy: [{ id: uid(), column: 'CANAL' }],
+      orderBy: [{ id: uid(), column: 'receita_total', direction: 'DESC' }],
+      limit: '10',
+    })
+  },
+  {
+    titulo: '9. Resultado mensal',
+    desc: 'Clientes distintos e receita total separados por mês.',
+    state: () => makeExampleState({
+      select: [
+        { id: uid(), column: 'DATA_PEDIDO', func: 'DATE_ANOMES', alias: 'mes' },
+        { id: uid(), column: 'CLIENTE_ID', func: 'COUNT_DISTINCT', alias: 'qtd_clientes' },
+        { id: uid(), column: 'VALOR_TOTAL', func: 'SUM', alias: 'receita_total' },
+      ],
+      from: 'pedidos',
+      groupBy: [{ id: uid(), column: 'DATA_PEDIDO', agrupamento: 'DATE_ANOMES' }],
+      orderBy: [{ id: uid(), column: 'mes', direction: 'ASC' }],
+    })
+  },
+];
+
+function previewQueryFor(exampleState) {
+  const backup = JSON.parse(JSON.stringify(state));
+  Object.assign(state, exampleState);
+  const text = buildQueryString();
+  Object.keys(state).forEach(k => delete state[k]);
+  Object.assign(state, backup);
+  return text;
+}
+
+function renderExamples() {
+  const grid = document.getElementById('examples-grid');
+  grid.innerHTML = EXAMPLES.map((ex, i) => {
+    const preview = previewQueryFor(ex.state());
+    return `
+    <div class="example-card">
+      <h3>${escapeHtml(ex.titulo)}</h3>
+      <p class="fn-desc">${escapeHtml(ex.desc)}</p>
+      <pre>${escapeHtml(preview)}</pre>
+      <button data-idx="${i}"><i class="fa-solid fa-download"></i> Carregar exemplo</button>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('button[data-idx]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const ex = EXAMPLES[Number(btn.dataset.idx)];
+      Object.keys(state).forEach(k => delete state[k]);
+      Object.assign(state, ex.state());
+      document.getElementById('input-demanda').value = state.demanda || '';
+      document.getElementById('input-limit').value = state.limit || '';
+      renderFromOptions();
+      renderFromDetails();
+      renderAll(['select','join','where','groupby','having','orderby']);
+      document.querySelector('.tab-btn[data-tab="construtor"]').click();
+      document.getElementById('block-select').scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  });
+}
+
+/* -------------------------------------------------------------------- *
+ * 17. INIT
+ * -------------------------------------------------------------------- */
+
+function renderAll(parts) {
+  if (parts.includes('select')) renderSelect();
+  if (parts.includes('from')) { renderFromOptions(); renderFromDetails(); }
+  if (parts.includes('join')) renderJoin();
+  if (parts.includes('where')) renderWhere();
+  if (parts.includes('groupby')) renderGroupBy();
+  if (parts.includes('having')) renderHaving();
+  if (parts.includes('orderby')) renderOrderBy();
+  renderQuery();
+}
+
+renderFromOptions();
+renderAll(['select','join','where','groupby','having','orderby']);
+renderFunctionCards();
+renderExamples();
+
+</script>
+</body>
+</html>
