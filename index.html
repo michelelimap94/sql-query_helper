@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SQL Query Helper</title>
+<style>
+:root{--bg:#f4f7f6;--card:#fff;--ink:#18282b;--muted:#607174;--line:#d8e2df;--green:#2f6e64;--green2:#e4f0ed;--orange:#b15b2a;--dark:#152329}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}header{background:linear-gradient(135deg,#173f3a,#2f6e64);color:#fff;padding:34px 20px}main{max-width:1180px;margin:auto;padding:24px}.hero{max-width:1180px;margin:auto}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}.hero h1{font-size:38px;margin:8px 0}.hero p{max-width:720px;margin:0;color:#e2eeeb}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 5px 20px #19332b0b}.card h2{font-size:20px;margin:0 0 15px}.field{margin:12px 0}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}.field textarea{min-height:80px;resize:vertical}.checks{display:flex;flex-wrap:wrap;gap:8px}.checks label{background:var(--green2);padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600}.checks input{margin-right:5px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:9px;padding:11px 15px;font-weight:700}.primary{background:var(--green);color:#fff}.secondary{background:#edf2f1;color:var(--ink)}.orange{background:var(--orange);color:#fff}.output{margin-top:20px}.code{background:var(--dark);color:#e7efec;border-radius:12px;padding:18px;min-height:180px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px;line-height:1.65;overflow:auto}.hint{font-size:13px;color:var(--muted);line-height:1.55}.example{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;background:#fafcfb;cursor:pointer}.example strong{display:block}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{background:#eef3f2;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px}.guide{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.guide div{padding:12px;background:#fafcfb;border:1px solid var(--line);border-radius:9px}.guide b{display:block;color:var(--green);margin-bottom:4px}@media(max-width:800px){.grid{grid-template-columns:1fr}.guide{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}}@media(max-width:520px){main{padding:14px}.guide{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="hero"><div class="eyebrow">Data • SQL • Practice</div><h1>SQL Query Helper</h1><p>Uma ferramenta interativa para montar, entender e praticar consultas SQL usando cenários genéricos de dados.</p></div></header>
+<main>
+<section class="grid">
+<div class="card">
+<h2>1. Monte sua consulta</h2>
+<div class="field"><label>Tabela principal</label><select id="table"><option value="clientes">clientes</option><option value="pedidos">pedidos</option><option value="produtos">produtos</option><option value="pagamentos">pagamentos</option><option value="campanhas">campanhas</option></select></div>
+<div class="field"><label>Colunas do SELECT</label><input id="cols" value="id_cliente, nome, cidade"></div>
+<div class="field"><label>Filtros (WHERE)</label><input id="where" placeholder="ex.: cidade = 'Rio de Janeiro'"></div>
+<div class="field"><label>Agregação</label><select id="agg"><option value="">Nenhuma</option><option value="COUNT(*) AS total">COUNT(*) AS total</option><option value="COUNT(DISTINCT id_cliente) AS clientes_unicos">COUNT(DISTINCT id_cliente) AS clientes_unicos</option><option value="SUM(valor) AS valor_total">SUM(valor) AS valor_total</option><option value="AVG(valor) AS valor_medio">AVG(valor) AS valor_medio</option></select></div>
+<div class="field"><label>GROUP BY</label><input id="group" placeholder="ex.: cidade"></div>
+<div class="field"><label>ORDER BY</label><input id="order" placeholder="ex.: valor_total DESC"></div>
+<div class="field"><label>LIMIT</label><input id="limit" type="number" placeholder="ex.: 10"></div>
+<div class="actions"><button class="primary" onclick="build()">Gerar SQL</button><button class="secondary" onclick="resetForm()">Limpar</button></div>
+</div>
+<div class="card">
+<h2>2. Exemplos rápidos</h2>
+<div class="example" onclick="example('clientes')"><strong>Clientes por cidade</strong><span class="hint">Agrupar clientes e contar registros.</span></div>
+<div class="example" onclick="example('pedidos')"><strong>Vendas por período</strong><span class="hint">Filtrar pedidos e somar valores.</span></div>
+<div class="example" onclick="example('produtos')"><strong>Produtos mais vendidos</strong><span class="hint">Usar COUNT, GROUP BY e ORDER BY.</span></div>
+<div class="example" onclick="example('campanhas')"><strong>Resultado de campanhas</strong><span class="hint">Analisar conversões por campanha.</span></div>
+<h2 style="margin-top:22px">Tabelas fictícias</h2>
+<div class="chips"><span class="chip">clientes</span><span class="chip">pedidos</span><span class="chip">produtos</span><span class="chip">pagamentos</span><span class="chip">campanhas</span></div>
+<p class="hint">Os nomes e exemplos são genéricos e servem apenas para estudo e demonstração.</p>
+</div>
+</section>
+<section class="card output"><h2>SQL gerado</h2><div id="sql" class="code">Clique em “Gerar SQL” para montar sua consulta.</div><div class="actions"><button class="orange" onclick="copySQL()">Copiar SQL</button></div></section>
+<section class="card" style="margin-top:20px"><h2>Ordem básica de uma consulta</h2><div class="guide"><div><b>1. SELECT</b>define as colunas ou métricas.</div><div><b>2. FROM</b>define a tabela de origem.</div><div><b>3. WHERE</b>filtra os registros.</div><div><b>4. GROUP BY</b>agrupa os dados.</div><div><b>5. HAVING</b>filtra agregações.</div><div><b>6. ORDER BY</b>ordena o resultado.</div><div><b>7. LIMIT</b>limita a quantidade retornada.</div><div><b>JOIN</b>combina informações de tabelas.</div></div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function build(){
+ const table=$('table').value, cols=$('cols').value.trim()||'*', where=$('where').value.trim(), agg=$('agg').value, group=$('group').value.trim(), order=$('order').value.trim(), limit=$('limit').value.trim();
+ let select=agg?((group?group+', ':'')+agg):cols;
+ let q='SELECT '+select+'\nFROM '+table;
+ if(where)q+='\nWHERE '+where;
+ if(group)q+='\nGROUP BY '+group;
+ if(order)q+='\nORDER BY '+order;
+ if(limit)q+='\nLIMIT '+limit;
+ $('sql').textContent=q+';';
+}
+function resetForm(){['where','group','order','limit'].forEach(id=>$(id).value='');$('cols').value='id_cliente, nome, cidade';$('agg').value='';$('table').value='clientes';$('sql').textContent='Clique em “Gerar SQL” para montar sua consulta.'}
+function example(type){
+ resetForm();
+ if(type==='clientes'){$('table').value='clientes';$('cols').value='cidade';$('agg').value='COUNT(*) AS total_clientes';$('group').value='cidade';$('order').value='total_clientes DESC'}
+ if(type==='pedidos'){$('table').value='pedidos';$('cols').value='mes';$('agg').value='SUM(valor) AS receita_total';$('group').value='mes';$('order').value='receita_total DESC'}
+ if(type==='produtos'){$('table').value='produtos';$('cols').value='nome_produto';$('agg').value='COUNT(*) AS quantidade_vendida';$('group').value='nome_produto';$('order').value='quantidade_vendida DESC';$('limit').value='10'}
+ if(type==='campanhas'){$('table').value='campanhas';$('cols').value='nome_campanha';$('agg').value='SUM(conversoes) AS conversoes';$('group').value='nome_campanha';$('order').value='conversoes DESC'}
+ build();
+}
+async function copySQL(){const text=$('sql').textContent;if(!text||text.startsWith('Clique'))return;navigator.clipboard.writeText(text);event.target.textContent='Copiado!';setTimeout(()=>event.target.textContent='Copiar SQL',1200)}
+</script>
+</body>
+</html>
