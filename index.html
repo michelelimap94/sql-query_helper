@@ -2,64 +2,998 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SQL Query Helper</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Query Helper | Practice SQL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-:root{--bg:#f4f7f6;--card:#fff;--ink:#18282b;--muted:#607174;--line:#d8e2df;--green:#2f6e64;--green2:#e4f0ed;--orange:#b15b2a;--dark:#152329}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif}header{background:linear-gradient(135deg,#173f3a,#2f6e64);color:#fff;padding:34px 20px}main{max-width:1180px;margin:auto;padding:24px}.hero{max-width:1180px;margin:auto}.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}.hero h1{font-size:38px;margin:8px 0}.hero p{max-width:720px;margin:0;color:#e2eeeb}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 5px 20px #19332b0b}.card h2{font-size:20px;margin:0 0 15px}.field{margin:12px 0}.field label{display:block;font-weight:700;font-size:13px;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}.field textarea{min-height:80px;resize:vertical}.checks{display:flex;flex-wrap:wrap;gap:8px}.checks label{background:var(--green2);padding:8px 10px;border-radius:8px;font-size:13px;font-weight:600}.checks input{margin-right:5px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:9px;padding:11px 15px;font-weight:700}.primary{background:var(--green);color:#fff}.secondary{background:#edf2f1;color:var(--ink)}.orange{background:var(--orange);color:#fff}.output{margin-top:20px}.code{background:var(--dark);color:#e7efec;border-radius:12px;padding:18px;min-height:180px;white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px;line-height:1.65;overflow:auto}.hint{font-size:13px;color:var(--muted);line-height:1.55}.example{border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;background:#fafcfb;cursor:pointer}.example strong{display:block}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{background:#eef3f2;border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:12px}.guide{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.guide div{padding:12px;background:#fafcfb;border:1px solid var(--line);border-radius:9px}.guide b{display:block;color:var(--green);margin-bottom:4px}@media(max-width:800px){.grid{grid-template-columns:1fr}.guide{grid-template-columns:1fr 1fr}.hero h1{font-size:30px}}@media(max-width:520px){main{padding:14px}.guide{grid-template-columns:1fr}}
+/* ===================================================================
+   SQL Query Helper — tema "blueprint de dados"
+   Paleta: papel azulado + tinta petróleo + destaque cobre queimado
+=================================================================== */
+
+:root{
+  --paper:        #EEF2F1;
+  --paper-raised: #FFFFFF;
+  --ink:          #16262A;
+  --ink-soft:     #4A5C60;
+  --line:         #D5DEDC;
+  --line-strong:  #B7C4C1;
+
+  --pine:         #2F6E64;
+  --pine-dark:    #1F4B44;
+  --pine-tint:    #E3EFEC;
+
+  --copper:       #B15B2A;
+  --copper-tint:  #F6E7DB;
+
+  --code-bg:      #16242A;
+  --code-line:    #24363D;
+  --code-text:    #E7EEEB;
+  --code-accent:  #7FD1BE;
+  --code-muted:   #7C8E92;
+
+  --warn-bg:      #FBF0DE;
+  --warn-border:  #E0AD53;
+  --warn-text:    #6B4A17;
+
+  --radius-s: 6px;
+  --radius-m: 10px;
+
+  --font-display: 'Spectral', Georgia, serif;
+  --font-body: 'Public Sans', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  margin:0;
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,h2,h3{ font-family: var(--font-display); margin: 0; color: var(--pine-dark); }
+
+button{ font-family: var(--font-body); cursor: pointer; }
+input, select, textarea{ font-family: var(--font-body); }
+
+code{ font-family: var(--font-mono); background: var(--pine-tint); padding: 0.1em 0.4em; border-radius: 4px; font-size: 0.9em; }
+
+/* ---------------- Topbar ---------------- */
+
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1.3rem 2rem;
+  background: var(--paper-raised);
+  border-bottom: 1px solid var(--line-strong);
+  position: sticky; top:0; z-index: 30;
+}
+.topbar-brand{ display:flex; align-items:center; gap: 1rem; }
+.brand-mark{
+  font-family: var(--font-mono);
+  font-weight:600; font-size: 0.72rem; letter-spacing: 0.04em;
+  color: var(--pine);
+  background: var(--pine-tint);
+  border: 1px solid var(--pine);
+  border-radius: var(--radius-s);
+  padding: 0.5rem 0.6rem;
+}
+.brand-text h1{ font-size: 1.5rem; font-weight: 600; line-height:1.1; }
+.brand-text p{ margin: 0.15rem 0 0; color: var(--ink-soft); font-size: 0.92rem; }
+
+.tabs{ display:flex; gap: 0.4rem; }
+.tab-btn{
+  display:flex; align-items:center; gap:0.5rem;
+  background: transparent; border: 1px solid transparent;
+  color: var(--ink-soft); font-weight:600; font-size: 0.92rem;
+  padding: 0.55rem 0.9rem; border-radius: var(--radius-s);
+}
+.tab-btn:hover{ background: var(--pine-tint); }
+.tab-btn.is-active{ background: var(--pine); color: #fff; }
+
+.intro-note{
+  margin: 0.9rem 2rem 0;
+  color: var(--pine-dark);
+  background: var(--pine-tint);
+  border: 1px dashed var(--pine);
+  border-radius: var(--radius-m);
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  display:flex; gap:0.5rem; align-items:center;
+}
+
+/* ---------------- Layout ---------------- */
+
+.view{ display:none; }
+.view.is-active{ display:grid; }
+
+#view-construtor{
+  grid-template-columns: 220px minmax(0,1fr) 380px;
+  gap: 1.4rem;
+  padding: 1.4rem 2rem 4rem;
+  align-items: start;
+}
+
+.rail{ position: sticky; top: 92px; display:flex; flex-direction:column; gap: 1rem; }
+.rail-card{
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1rem;
+}
+.rail-card h3{ font-size: 0.82rem; text-transform: none; color: var(--ink-soft); font-family: var(--font-body); font-weight:700; margin-bottom: 0.7rem; }
+
+.order-chain{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0.35rem; }
+.order-chain li{
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding: 0.4rem 0.55rem; border-radius: var(--radius-s);
+  border-left: 3px solid var(--line-strong);
+  font-family: var(--font-mono); font-size: 0.78rem; font-weight:600;
+  color: var(--ink-soft);
+  transition: all .15s ease;
+}
+.order-chain li small{ font-family: var(--font-body); font-weight:400; opacity:0.8; }
+.order-chain li.is-filled{ border-left-color: var(--pine); color: var(--pine-dark); background: var(--pine-tint); }
+
+.rail-reasoning ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:0.55rem; }
+.rail-reasoning li{ font-size: 0.82rem; color: var(--ink-soft); line-height:1.4; }
+.rail-reasoning li b{ color: var(--pine); }
+
+.form-column{ display:flex; flex-direction:column; gap: 1.1rem; min-width:0; }
+
+.block{
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 1.2rem 1.3rem;
+}
+.block.is-active-step{ border-color: var(--pine); box-shadow: 0 0 0 3px var(--pine-tint); }
+
+.block-head{ display:flex; align-items:center; gap:0.7rem; margin-bottom: 0.5rem; }
+.step-tag{
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight:600;
+  color: #fff; background: var(--pine); border-radius: 5px; padding: 0.2rem 0.5rem;
+}
+.block-head h2{ font-size: 1.12rem; font-weight:600; }
+.block-desc{ color: var(--ink-soft); font-size: 0.9rem; margin: 0 0 0.8rem; }
+.hint{ color: var(--ink-soft); font-size: 0.82rem; margin: 0.5rem 0 0; }
+
+textarea, input[type=number], input[type=text], select{
+  width:100%; border: 1px solid var(--line-strong); border-radius: var(--radius-s);
+  padding: 0.6rem 0.7rem; font-size: 0.92rem; color: var(--ink); background: #fff;
+}
+textarea{ resize: vertical; }
+textarea:focus, input:focus, select:focus{ outline: 2px solid var(--pine); outline-offset: 1px; }
+
+.item-list{ display:flex; flex-direction:column; gap:0.6rem; margin-bottom: 0.7rem; }
+.item-row{
+  display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center;
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius-s);
+  padding: 0.55rem 0.6rem;
+}
+.item-row select, .item-row input{ flex: 1 1 140px; min-width: 110px; width:auto; padding:0.45rem 0.55rem; font-size:0.85rem; }
+.item-row .connector-select{ flex: 0 0 70px; }
+.item-row .fn-select{ flex: 0 0 150px; }
+.item-row .alias-input{ flex: 1 1 120px; }
+.btn-remove{
+  border:none; background: transparent; color: var(--copper);
+  width: 30px; height:30px; border-radius: 50%; flex: 0 0 auto;
+  display:flex; align-items:center; justify-content:center;
+}
+.btn-remove:hover{ background: var(--copper-tint); }
+
+.btn-add{
+  align-self:flex-start;
+  border: 1px dashed var(--pine); background: var(--pine-tint); color: var(--pine-dark);
+  font-weight:600; font-size:0.85rem; padding: 0.45rem 0.8rem; border-radius: var(--radius-s);
+  display:flex; align-items:center; gap:0.4rem;
+}
+.btn-add:hover{ background: var(--pine); color:#fff; }
+
+.tip{ font-size:0.82rem; color: var(--ink-soft); margin: 0.6rem 0 0; display:flex; gap:0.4rem; align-items:flex-start; }
+.examples-tip code{ margin-right:0.2rem; }
+
+.table-details{
+  margin-top: 0.9rem; background: var(--paper); border:1px solid var(--line);
+  border-radius: var(--radius-s); padding: 0.9rem 1rem;
+}
+.table-details h4{ margin:0 0 0.3rem; font-size:0.95rem; color: var(--pine-dark); }
+.table-details .meta-row{ font-size:0.8rem; color: var(--ink-soft); margin-bottom:0.5rem; }
+.table-details .usage-box{
+  background: var(--copper-tint); border-left: 3px solid var(--copper);
+  padding: 0.5rem 0.7rem; border-radius: 5px; font-size: 0.83rem; margin-bottom:0.7rem;
+}
+.table-details .col-list{ display:flex; flex-wrap:wrap; gap:0.35rem; max-height:160px; overflow:auto; }
+.table-details .col-chip{
+  font-family: var(--font-mono); font-size:0.72rem; background:#fff; border:1px solid var(--line-strong);
+  padding:0.15rem 0.45rem; border-radius:4px; color: var(--ink-soft);
+}
+
+.join-explain, .groupby-compare, .where-having-compare{
+  display:flex; flex-wrap:wrap; gap:0.7rem; margin: 0.7rem 0; font-size: 0.83rem; color: var(--ink-soft);
+}
+.join-explain div, .groupby-compare div, .where-having-compare div{
+  flex:1 1 220px; background: var(--paper); border:1px solid var(--line); border-radius: var(--radius-s); padding:0.5rem 0.7rem;
+}
+
+/* ---------------- Query panel ---------------- */
+
+.query-panel{
+  position: sticky; top: 92px;
+  background: var(--code-bg); border-radius: var(--radius-m);
+  padding: 1rem 1rem 1.2rem; color: var(--code-text);
+  display:flex; flex-direction:column; gap:0.7rem;
+  max-height: calc(100vh - 120px); overflow:auto;
+}
+.query-panel-head{ display:flex; align-items:center; justify-content:space-between; }
+.query-panel-head h3{ color:#fff; font-size:1rem; font-family: var(--font-mono); }
+.query-actions{ display:flex; gap:0.4rem; }
+.query-actions button{
+  background: var(--code-line); border:1px solid #33474e; color: var(--code-text);
+  width:32px; height:32px; border-radius:6px;
+}
+.query-actions button:hover{ background: var(--pine); border-color: var(--pine); }
+
+.query-code{
+  font-family: var(--font-mono); font-size: 0.85rem; line-height:1.55;
+  background: #101c20; border-radius: var(--radius-s); padding: 0.9rem 1rem;
+  white-space: pre-wrap; word-break: break-word; margin:0;
+  border: 1px solid var(--code-line);
+}
+.query-code .kw{ color: var(--code-accent); font-weight:600; }
+.query-code .muted{ color: var(--code-muted); }
+
+.warnings{ display:flex; flex-direction:column; gap:0.5rem; }
+.warning-item{
+  background: var(--warn-bg); border: 1px solid var(--warn-border); color: var(--warn-text);
+  font-size: 0.8rem; padding: 0.55rem 0.7rem; border-radius: var(--radius-s);
+  display:flex; gap:0.5rem; align-items:flex-start;
+}
+.btn-suggestion{
+  margin-top: 0.4rem; border: 1px solid var(--warn-text); background: transparent; color: var(--warn-text);
+  font-weight:600; font-size: 0.76rem; padding: 0.3rem 0.6rem; border-radius: var(--radius-s);
+}
+.btn-suggestion:hover{ background: var(--warn-text); color: #fff; }
+.date-func-hint{ margin-top: 0.35rem; }
+
+.btn-explain{
+  border:1px solid var(--pine); background: transparent; color: var(--code-accent);
+  font-weight:600; font-size:0.85rem; padding:0.55rem 0.8rem; border-radius: var(--radius-s);
+  display:flex; align-items:center; justify-content:center; gap:0.5rem;
+}
+.btn-explain:hover{ background: var(--pine); color:#fff; }
+
+.explanation{
+  background: #101c20; border: 1px solid var(--code-line); border-radius: var(--radius-s);
+  padding: 0.8rem 0.9rem; font-size: 0.83rem; display:flex; flex-direction:column; gap:0.45rem;
+}
+.explanation .line b{ color: var(--code-accent); font-family: var(--font-mono); font-size:0.8rem; }
+.explanation .line p{ margin: 0.15rem 0 0; color: var(--code-text); opacity:0.9; }
+
+/* ---------------- Funções / Exemplos ---------------- */
+
+#view-funcoes, #view-exemplos{ padding: 1.6rem 2rem 4rem; }
+#view-funcoes.is-active, #view-exemplos.is-active{ display:block; }
+
+.ref-header h2{ font-size: 1.4rem; }
+.ref-header p{ color: var(--ink-soft); margin: 0.3rem 0 1.2rem; }
+
+.cards-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 1rem; }
+
+.fn-card{
+  background: var(--paper-raised); border:1px solid var(--line); border-radius: var(--radius-m);
+  padding: 1rem 1.1rem; display:flex; flex-direction:column; gap:0.45rem;
+}
+.fn-card h3{ font-family: var(--font-mono); font-size:1rem; color: var(--pine-dark); }
+.fn-card .fn-syntax{ font-family: var(--font-mono); background: var(--pine-tint); padding: 0.35rem 0.5rem; border-radius:5px; font-size:0.82rem; }
+.fn-card .fn-desc{ font-size: 0.85rem; color: var(--ink-soft); margin:0; }
+.fn-card .fn-example{ font-size:0.8rem; color: var(--ink); }
+.fn-card .fn-read{ font-size: 0.78rem; font-style: italic; color: var(--copper); }
+
+.order-guide{
+  list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center;
+}
+.order-guide li{
+  background: var(--paper-raised); border:1px solid var(--line-strong); border-radius: var(--radius-s);
+  padding: 0.5rem 0.8rem; font-family: var(--font-mono); font-size:0.85rem; font-weight:600; color: var(--pine-dark);
+  display:flex; flex-direction:column; gap:0.15rem;
+}
+.order-guide li span{ font-family: var(--font-body); font-weight:400; font-size:0.72rem; color: var(--ink-soft); }
+.order-guide li:not(:last-child)::after{ content:'→'; }
+
+.example-card{
+  background: var(--paper-raised); border:1px solid var(--line); border-radius: var(--radius-m);
+  padding: 1rem 1.1rem; display:flex; flex-direction:column; gap:0.6rem;
+}
+.example-card h3{ font-size:1rem; color: var(--pine-dark); }
+.example-card pre{
+  font-family: var(--font-mono); font-size:0.76rem; background: var(--code-bg); color: var(--code-text);
+  padding: 0.7rem 0.8rem; border-radius:6px; overflow:auto; margin:0; max-height:160px;
+}
+.example-card button{
+  align-self:flex-start; background: var(--pine); color:#fff; border:none;
+  padding: 0.4rem 0.75rem; border-radius: var(--radius-s); font-size:0.82rem; font-weight:600;
+}
+.example-card button:hover{ background: var(--pine-dark); }
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 980px){
+  #view-construtor{ grid-template-columns: 1fr; }
+  .rail{ position:static; flex-direction: row; overflow-x:auto; }
+  .rail-card{ min-width: 240px; }
+  .query-panel{ position:static; max-height:none; }
+}
+
+@media (max-width: 640px){
+  .topbar{ padding: 1rem; flex-direction:column; align-items:flex-start; }
+  .tabs{ width:100%; overflow-x:auto; }
+  .intro-note{ margin: 0.9rem 1rem 0; }
+  #view-construtor{ padding: 1rem 1rem 3rem; }
+  #view-funcoes, #view-exemplos{ padding: 1.2rem 1rem 3rem; }
+  .item-row select, .item-row input{ flex: 1 1 100%; }
+  .rail{ flex-direction: column; overflow-x: visible; }
+  .rail-card{ min-width: 0; }
+}
+
 </style>
 </head>
 <body>
-<header><div class="hero"><div class="eyebrow">Data • SQL • Practice</div><h1>SQL Query Helper</h1><p>Uma ferramenta interativa para montar, entender e praticar consultas SQL usando cenários genéricos de dados.</p></div></header>
-<main>
-<section class="grid">
-<div class="card">
-<h2>1. Monte sua consulta</h2>
-<div class="field"><label>Tabela principal</label><select id="table"><option value="clientes">clientes</option><option value="pedidos">pedidos</option><option value="produtos">produtos</option><option value="pagamentos">pagamentos</option><option value="campanhas">campanhas</option></select></div>
-<div class="field"><label>Colunas do SELECT</label><input id="cols" value="id_cliente, nome, cidade"></div>
-<div class="field"><label>Filtros (WHERE)</label><input id="where" placeholder="ex.: cidade = 'Rio de Janeiro'"></div>
-<div class="field"><label>Agregação</label><select id="agg"><option value="">Nenhuma</option><option value="COUNT(*) AS total">COUNT(*) AS total</option><option value="COUNT(DISTINCT id_cliente) AS clientes_unicos">COUNT(DISTINCT id_cliente) AS clientes_unicos</option><option value="SUM(valor) AS valor_total">SUM(valor) AS valor_total</option><option value="AVG(valor) AS valor_medio">AVG(valor) AS valor_medio</option></select></div>
-<div class="field"><label>GROUP BY</label><input id="group" placeholder="ex.: cidade"></div>
-<div class="field"><label>ORDER BY</label><input id="order" placeholder="ex.: valor_total DESC"></div>
-<div class="field"><label>LIMIT</label><input id="limit" type="number" placeholder="ex.: 10"></div>
-<div class="actions"><button class="primary" onclick="build()">Gerar SQL</button><button class="secondary" onclick="resetForm()">Limpar</button></div>
-</div>
-<div class="card">
-<h2>2. Exemplos rápidos</h2>
-<div class="example" onclick="example('clientes')"><strong>Clientes por cidade</strong><span class="hint">Agrupar clientes e contar registros.</span></div>
-<div class="example" onclick="example('pedidos')"><strong>Vendas por período</strong><span class="hint">Filtrar pedidos e somar valores.</span></div>
-<div class="example" onclick="example('produtos')"><strong>Produtos mais vendidos</strong><span class="hint">Usar COUNT, GROUP BY e ORDER BY.</span></div>
-<div class="example" onclick="example('campanhas')"><strong>Resultado de campanhas</strong><span class="hint">Analisar conversões por campanha.</span></div>
-<h2 style="margin-top:22px">Tabelas fictícias</h2>
-<div class="chips"><span class="chip">clientes</span><span class="chip">pedidos</span><span class="chip">produtos</span><span class="chip">pagamentos</span><span class="chip">campanhas</span></div>
-<p class="hint">Os nomes e exemplos são genéricos e servem apenas para estudo e demonstração.</p>
-</div>
-</section>
-<section class="card output"><h2>SQL gerado</h2><div id="sql" class="code">Clique em “Gerar SQL” para montar sua consulta.</div><div class="actions"><button class="orange" onclick="copySQL()">Copiar SQL</button></div></section>
-<section class="card" style="margin-top:20px"><h2>Ordem básica de uma consulta</h2><div class="guide"><div><b>1. SELECT</b>define as colunas ou métricas.</div><div><b>2. FROM</b>define a tabela de origem.</div><div><b>3. WHERE</b>filtra os registros.</div><div><b>4. GROUP BY</b>agrupa os dados.</div><div><b>5. HAVING</b>filtra agregações.</div><div><b>6. ORDER BY</b>ordena o resultado.</div><div><b>7. LIMIT</b>limita a quantidade retornada.</div><div><b>JOIN</b>combina informações de tabelas.</div></div></section>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="brand-mark">SELECT</span>
+    <div class="brand-text">
+      <h1>SQL Query Helper</h1>
+      <p>Pratique SQL transformando uma demanda de negócio em uma query passo a passo.</p>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Seções da aplicação">
+    <button class="tab-btn is-active" data-tab="construtor" role="tab" aria-selected="true">
+      <i class="fa-solid fa-diagram-project"></i> Construtor
+    </button>
+    <button class="tab-btn" data-tab="funcoes" role="tab" aria-selected="false">
+      <i class="fa-solid fa-book"></i> Funções SQL
+    </button>
+    <button class="tab-btn" data-tab="exemplos" role="tab" aria-selected="false">
+      <i class="fa-solid fa-flask"></i> Exemplos
+    </button>
+  </nav>
+</header>
+
+<p class="intro-note">
+  <i class="fa-solid fa-lightbulb"></i>
+  Pratique SQL com uma base totalmente fictícia. Base 100% fictícia para estudo e portfólio. Preencha os blocos abaixo na ordem — você não precisa usar todos.
+</p>
+
+<!-- ===================== TAB: CONSTRUTOR ===================== -->
+<main class="view is-active" id="view-construtor">
+
+  <aside class="rail">
+    <div class="rail-card">
+      <h3>Ordem da consulta</h3>
+      <ol class="order-chain" id="order-chain">
+        <li data-step="select"><span>SELECT</span><small>o quê?</small></li>
+        <li data-step="from"><span>FROM</span><small>de onde?</small></li>
+        <li data-step="join"><span>JOIN</span><small>outra tabela?</small></li>
+        <li data-step="where"><span>WHERE</span><small>quais linhas?</small></li>
+        <li data-step="groupby"><span>GROUP BY</span><small>separar por quê?</small></li>
+        <li data-step="having"><span>HAVING</span><small>quais grupos?</small></li>
+        <li data-step="orderby"><span>ORDER BY</span><small>qual ordem?</small></li>
+        <li data-step="limit"><span>LIMIT</span><small>quantos?</small></li>
+      </ol>
+    </div>
+    <div class="rail-card rail-reasoning">
+      <h3>Guia de raciocínio</h3>
+      <ul>
+        <li><b>1.</b> O que quero descobrir?</li>
+        <li><b>2.</b> De qual tabela vêm esses dados?</li>
+        <li><b>3.</b> Preciso filtrar alguma coisa?</li>
+        <li><b>4.</b> Preciso agrupar?</li>
+        <li><b>5.</b> Estou filtrando linhas ou resultados agregados?</li>
+        <li><b>6.</b> Preciso ordenar?</li>
+        <li><b>7.</b> Preciso limitar a quantidade?</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="form-column">
+
+    <section class="block" id="block-demanda">
+      <div class="block-head">
+        <h2>Qual foi a demanda recebida?</h2>
+      </div>
+      <textarea id="input-demanda" rows="3" placeholder="Exemplo: Preciso saber quantos clientes fizeram pedidos no mês e qual foi o valor total das vendas."></textarea>
+      <p class="hint">Esse campo é só uma referência visual enquanto você monta a consulta — ele não altera a query.</p>
+    </section>
+
+    <section class="block" id="block-select" data-step="select">
+      <div class="block-head">
+        <span class="step-tag">SELECT</span>
+        <h2>O que eu quero ver?</h2>
+      </div>
+      <p class="block-desc">O SELECT define quais informações aparecerão no resultado.</p>
+      <div id="select-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-select"><i class="fa-solid fa-plus"></i> Adicionar coluna</button>
+      <p class="tip"><i class="fa-solid fa-comment"></i> Pergunte: quero CONTAR, SOMAR, calcular MÉDIA ou simplesmente EXIBIR esta coluna?</p>
+    </section>
+
+    <section class="block" id="block-from" data-step="from">
+      <div class="block-head">
+        <span class="step-tag">FROM</span>
+        <h2>De onde vêm os dados?</h2>
+      </div>
+      <select id="select-from">
+        <option value="">Selecione uma tabela…</option>
+      </select>
+      <div id="from-details" class="table-details" hidden></div>
+    </section>
+
+    <section class="block" id="block-join" data-step="join">
+      <div class="block-head">
+        <span class="step-tag">JOIN</span>
+        <h2>Preciso buscar informação em outra tabela?</h2>
+      </div>
+      <div id="join-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-join"><i class="fa-solid fa-plus"></i> Adicionar JOIN</button>
+      <div class="join-explain">
+        <div><b>INNER JOIN</b> — retorna apenas registros encontrados nas duas tabelas.</div>
+        <div><b>LEFT JOIN</b> — mantém todos os registros da tabela principal, mesmo sem correspondência na outra.</div>
+      </div>
+    </section>
+
+    <section class="block" id="block-where" data-step="where">
+      <div class="block-head">
+        <span class="step-tag">WHERE</span>
+        <h2>Quais linhas eu quero?</h2>
+      </div>
+      <p class="block-desc">O WHERE filtra registros antes de agrupamentos e cálculos. <b>WHERE = filtra LINHAS.</b></p>
+      <div id="where-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-where"><i class="fa-solid fa-plus"></i> Adicionar condição</button>
+      <p class="tip examples-tip">Exemplos: <code>CLIENTE_ID = 12</code> · <code>CLIENTE_ID IN (12, 15, 20)</code> · <code>DATE BETWEEN '2026-09-01' AND '2026-09-30'</code> · <code>EMPRESA LIKE '%INTER%'</code></p>
+    </section>
+
+    <section class="block" id="block-groupby" data-step="groupby">
+      <div class="block-head">
+        <span class="step-tag">GROUP BY</span>
+        <h2>Como quero separar o resultado?</h2>
+      </div>
+      <p class="block-desc">Use GROUP BY quando estiver usando funções como COUNT, SUM ou AVG e também quiser dividir o resultado por alguma categoria.</p>
+      <div id="groupby-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-groupby"><i class="fa-solid fa-plus"></i> Adicionar coluna</button>
+      <div class="groupby-compare">
+        <div><b>Sem GROUP BY</b> → retorna um único total.</div>
+        <div><b>Com GROUP BY CLIENTE_ID</b> → retorna um total para cada CLIENTE_ID.</div>
+      </div>
+      <p class="tip"><i class="fa-regular fa-calendar"></i> Se a demanda pedir "por mês", selecione a coluna de data e escolha <b>ANO + MÊS</b>.</p>
+    </section>
+
+    <section class="block" id="block-having" data-step="having">
+      <div class="block-head">
+        <span class="step-tag">HAVING</span>
+        <h2>Quero filtrar depois do agrupamento?</h2>
+      </div>
+      <div class="where-having-compare">
+        <div><b>WHERE</b> → filtra linhas antes da agregação.</div>
+        <div><b>HAVING</b> → filtra grupos depois da agregação.</div>
+      </div>
+      <div id="having-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-having"><i class="fa-solid fa-plus"></i> Adicionar condição</button>
+      <p class="tip">Exemplo: <code>COUNT(*) &gt; 100</code> · <code>SUM(VALOR_TOTAL) &gt; 5000</code></p>
+    </section>
+
+    <section class="block" id="block-orderby" data-step="orderby">
+      <div class="block-head">
+        <span class="step-tag">ORDER BY</span>
+        <h2>Em qual ordem quero o resultado?</h2>
+      </div>
+      <div id="orderby-list" class="item-list"></div>
+      <button class="btn-add" id="btn-add-orderby"><i class="fa-solid fa-plus"></i> Adicionar ordenação</button>
+      <p class="tip"><b>ASC</b>: menor para maior / A-Z. &nbsp; <b>DESC</b>: maior para menor / Z-A.</p>
+    </section>
+
+    <section class="block" id="block-limit" data-step="limit">
+      <div class="block-head">
+        <span class="step-tag">LIMIT</span>
+        <h2>Quantos resultados quero?</h2>
+      </div>
+      <input type="number" id="input-limit" min="1" placeholder="Ex: 10">
+      <p class="hint">Útil para Top 5, Top 10, primeiros resultados etc.</p>
+    </section>
+
+  </div>
+
+  <aside class="query-panel">
+    <div class="query-panel-head">
+      <h3>Sua query</h3>
+      <div class="query-actions">
+        <button id="btn-copy" title="Copiar query"><i class="fa-regular fa-copy"></i></button>
+        <button id="btn-clear" title="Limpar tudo"><i class="fa-solid fa-broom"></i></button>
+      </div>
+    </div>
+    <pre id="query-output" class="query-code">-- monte sua consulta usando os blocos ao lado</pre>
+    <div id="warnings" class="warnings"></div>
+    <button class="btn-explain" id="btn-explain">
+      <i class="fa-solid fa-graduation-cap"></i> Explicar minha query
+    </button>
+    <div id="explanation" class="explanation" hidden></div>
+  </aside>
+
 </main>
+
+<!-- ===================== TAB: FUNÇÕES SQL ===================== -->
+<main class="view" id="view-funcoes">
+  <div class="ref-header">
+    <h2>Guia de funções SQL</h2>
+    <p>Cada card mostra para que a função serve, a sintaxe e um exemplo prático.</p>
+  </div>
+  <div id="functions-grid" class="cards-grid"></div>
+
+  <div class="ref-header" style="margin-top:2.5rem;">
+    <h2>Guia da ordem SQL</h2>
+    <p>A sequência lógica em que as cláusulas de uma consulta são escritas e processadas.</p>
+  </div>
+  <ol class="order-guide">
+    <li><b>SELECT</b><span>o quê?</span></li>
+    <li><b>FROM</b><span>de onde?</span></li>
+    <li><b>JOIN</b><span>preciso de outra tabela?</span></li>
+    <li><b>WHERE</b><span>quais linhas?</span></li>
+    <li><b>GROUP BY</b><span>separar por quê?</span></li>
+    <li><b>HAVING</b><span>quais grupos?</span></li>
+    <li><b>ORDER BY</b><span>qual ordem?</span></li>
+    <li><b>LIMIT</b><span>quantos?</span></li>
+  </ol>
+</main>
+
+<!-- ===================== TAB: EXEMPLOS ===================== -->
+<main class="view" id="view-exemplos">
+  <div class="ref-header">
+    <h2>Exemplos prontos</h2>
+    <p>Carregue um exemplo para ver como cada bloco foi preenchido, ou use como ponto de partida.</p>
+  </div>
+  <div id="examples-grid" class="cards-grid"></div>
+</main>
+
 <script>
-const $=id=>document.getElementById(id);
-function build(){
- const table=$('table').value, cols=$('cols').value.trim()||'*', where=$('where').value.trim(), agg=$('agg').value, group=$('group').value.trim(), order=$('order').value.trim(), limit=$('limit').value.trim();
- let select=agg?((group?group+', ':'')+agg):cols;
- let q='SELECT '+select+'\nFROM '+table;
- if(where)q+='\nWHERE '+where;
- if(group)q+='\nGROUP BY '+group;
- if(order)q+='\nORDER BY '+order;
- if(limit)q+='\nLIMIT '+limit;
- $('sql').textContent=q+';';
-}
-function resetForm(){['where','group','order','limit'].forEach(id=>$(id).value='');$('cols').value='id_cliente, nome, cidade';$('agg').value='';$('table').value='clientes';$('sql').textContent='Clique em “Gerar SQL” para montar sua consulta.'}
-function example(type){
- resetForm();
- if(type==='clientes'){$('table').value='clientes';$('cols').value='cidade';$('agg').value='COUNT(*) AS total_clientes';$('group').value='cidade';$('order').value='total_clientes DESC'}
- if(type==='pedidos'){$('table').value='pedidos';$('cols').value='mes';$('agg').value='SUM(valor) AS receita_total';$('group').value='mes';$('order').value='receita_total DESC'}
- if(type==='produtos'){$('table').value='produtos';$('cols').value='nome_produto';$('agg').value='COUNT(*) AS quantidade_vendida';$('group').value='nome_produto';$('order').value='quantidade_vendida DESC';$('limit').value='10'}
- if(type==='campanhas'){$('table').value='campanhas';$('cols').value='nome_campanha';$('agg').value='SUM(conversoes) AS conversoes';$('group').value='nome_campanha';$('order').value='conversoes DESC'}
- build();
-}
-async function copySQL(){const text=$('sql').textContent;if(!text||text.startsWith('Clique'))return;navigator.clipboard.writeText(text);event.target.textContent='Copiado!';setTimeout(()=>event.target.textContent='Copiar SQL',1200)}
+// Base de conhecimento fictícia usada pelo SQL Query Helper.
+// Todas as tabelas, colunas e exemplos são didáticos e independentes de qualquer banco corporativo.
+
+const database = {
+  // ==== BASE FICTÍCIA PARA PRÁTICA ====
+  // Todas as tabelas, colunas e exemplos abaixo são fictícios.
+  // Não representam estruturas, processos ou dados de nenhuma empresa real.
+
+  "clientes": {
+    nomeReal: "clientes",
+    secao: "CADASTRO",
+    descricao: "Cadastro fictício de clientes para exercícios de análise e segmentação.",
+    quandoUsar: "Analisar clientes por perfil, região, segmento ou período de cadastro.",
+    frequencia: "Exemplo didático.",
+    colunas: [
+      { nome: "CLIENTE_ID", descricao: "Identificador único do cliente." },
+      { nome: "NOME", descricao: "Nome fictício do cliente." },
+      { nome: "CIDADE", descricao: "Cidade de residência ou atendimento." },
+      { nome: "UF", descricao: "Unidade Federativa." },
+      { nome: "SEGMENTO", descricao: "Categoria comercial do cliente." },
+      { nome: "DATA_CADASTRO", descricao: "Data de cadastro do cliente." },
+      { nome: "STATUS", descricao: "Status cadastral do cliente." },
+    ]
+  },
+
+  "pedidos": {
+    nomeReal: "pedidos",
+    secao: "VENDAS",
+    descricao: "Registro fictício de pedidos realizados pelos clientes.",
+    quandoUsar: "Analisar vendas por período, canal, produto, cliente ou status.",
+    frequencia: "Exemplo didático.",
+    colunas: [
+      { nome: "PEDIDO_ID", descricao: "Identificador único do pedido." },
+      { nome: "CLIENTE_ID", descricao: "Identificador do cliente associado ao pedido." },
+      { nome: "PRODUTO_ID", descricao: "Identificador do produto vendido." },
+      { nome: "DATA_PEDIDO", descricao: "Data em que o pedido foi realizado." },
+      { nome: "CANAL", descricao: "Canal utilizado para realizar o pedido." },
+      { nome: "QUANTIDADE", descricao: "Quantidade de itens no pedido." },
+      { nome: "VALOR_TOTAL", descricao: "Valor total do pedido." },
+      { nome: "STATUS", descricao: "Status do pedido." },
+    ]
+  },
+
+  "produtos": {
+    nomeReal: "produtos",
+    secao: "CATÁLOGO",
+    descricao: "Catálogo fictício de produtos e categorias.",
+    quandoUsar: "Comparar produtos, categorias e preços em análises comerciais.",
+    frequencia: "Exemplo didático.",
+    colunas: [
+      { nome: "PRODUTO_ID", descricao: "Identificador único do produto." },
+      { nome: "PRODUTO", descricao: "Nome do produto." },
+      { nome: "CATEGORIA", descricao: "Categoria do produto." },
+      { nome: "PRECO", descricao: "Preço unitário do produto." },
+      { nome: "STATUS", descricao: "Status do produto no catálogo." },
+    ]
+  },
+
+  "pagamentos": {
+    nomeReal: "pagamentos",
+    secao: "FINANCEIRO",
+    descricao: "Registro fictício de pagamentos associados aos pedidos.",
+    quandoUsar: "Analisar valores pagos, status de pagamento e desempenho financeiro.",
+    frequencia: "Exemplo didático.",
+    colunas: [
+      { nome: "PAGAMENTO_ID", descricao: "Identificador único do pagamento." },
+      { nome: "PEDIDO_ID", descricao: "Identificador do pedido associado." },
+      { nome: "DATA_PAGAMENTO", descricao: "Data em que o pagamento foi realizado." },
+      { nome: "VALOR_PAGO", descricao: "Valor efetivamente pago." },
+      { nome: "FORMA_PAGAMENTO", descricao: "Forma utilizada para o pagamento." },
+      { nome: "STATUS_PAGAMENTO", descricao: "Status do pagamento." },
+    ]
+  },
+
+  "campanhas": {
+    nomeReal: "campanhas",
+    secao: "MARKETING",
+    descricao: "Cadastro fictício de campanhas de marketing e seus investimentos.",
+    quandoUsar: "Comparar campanhas por canal, investimento e período.",
+    frequencia: "Exemplo didático.",
+    colunas: [
+      { nome: "CAMPANHA_ID", descricao: "Identificador único da campanha." },
+      { nome: "CAMPANHA", descricao: "Nome da campanha." },
+      { nome: "CANAL", descricao: "Canal de divulgação da campanha." },
+      { nome: "INVESTIMENTO", descricao: "Valor investido na campanha." },
+      { nome: "DATA_INICIO", descricao: "Data de início da campanha." },
+      { nome: "DATA_FIM", descricao: "Data de encerramento da campanha." },
+      { nome: "STATUS", descricao: "Status da campanha." },
+    ]
+  }
+};
+
+if (typeof module !== 'undefined' && module.exports) { module.exports = database; }
 </script>
-</body>
-</html>
+<script>
+/* =========================================================================
+   SQL Query Helper — script.js
+   Aplicação 100% front-end. Nenhum dado real de cliente é usado ou gerado
+   aqui — apenas nomes de tabelas/colunas fictícios de referência.
+========================================================================= */
+
+/* -------------------------------------------------------------------- *
+ * 1. ESTADO DA APLICAÇÃO
+ * -------------------------------------------------------------------- */
+
+const FUNCS = [
+  { value: '',              label: 'Sem função' },
+  { value: 'COUNT',         label: 'COUNT' },
+  { value: 'COUNT_STAR',    label: 'COUNT(*)' },
+  { value: 'COUNT_DISTINCT',label: 'COUNT DISTINCT' },
+  { value: 'SUM',           label: 'SUM' },
+  { value: 'AVG',           label: 'AVG' },
+  { value: 'MIN',           label: 'MIN' },
+  { value: 'MAX',           label: 'MAX' },
+];
+
+// Funções específicas para colunas de DATA (SELECT e GROUP BY)
+const DATE_FUNCS = [
+  { value: 'DATE_DIA',    label: 'DIA',        wrap: col => `DATE_FORMAT(${col}, '%Y-%m-%d')`, hint: 'Mantém a análise no nível diário.' },
+  { value: 'DATE_MES',    label: 'MÊS',        wrap: col => `MONTH(${col})`,                    hint: 'Extrai o número do mês.' },
+  { value: 'DATE_ANO',    label: 'ANO',        wrap: col => `YEAR(${col})`,                     hint: 'Extrai somente o ano da data.' },
+  { value: 'DATE_ANOMES', label: 'ANO + MÊS',  wrap: col => `DATE_FORMAT(${col}, '%Y-%m')`,      hint: 'Transforma uma data como 15/07/2026 em 2026-07. Útil para relatórios mensais.' },
+];
+function dateFuncByValue(v) { return DATE_FUNCS.find(d => d.value === v); }
+function isDateColumn(col) {
+  if (!col) return false;
+  const bare = col.includes('.') ? col.split('.').pop() : col;
+  return /DATE|DATA|^DT_/i.test(bare);
+}
+
+const OPERATORS = ['=', '!=', '<>', '>', '<', '>=', '<=', 'IN', 'NOT IN', 'BETWEEN', 'LIKE', 'NOT LIKE', 'IS NULL', 'IS NOT NULL'];
+
+const state = {
+  demanda: '',
+  select: [],     // { column, func, alias }
+  from: '',
+  joins: [],      // { type, table, colMain, colJoin }
+  where: [],      // { column, operator, value, connector }  connector applies AFTER this item
+  groupBy: [],    // [column]
+  having: [],     // { func, column, operator, value }
+  orderBy: [],    // { column, direction }
+  limit: '',
+};
+
+let uidCounter = 0;
+const uid = () => 'row_' + (uidCounter++);
+
+/* -------------------------------------------------------------------- *
+ * 2. HELPERS DE TABELAS / COLUNAS
+ * -------------------------------------------------------------------- */
+
+function tableList() {
+  return Object.keys(database).map(key => ({ key, ...database[key] }));
+}
+
+function aliasFor(tableKey) {
+  const parts = tableKey.split('_').filter(Boolean);
+  let alias = parts.map(p => p[0]).join('').toLowerCase();
+  if (!alias) alias = tableKey.slice(0, 1).toLowerCase();
+  return alias;
+}
+
+// Retorna aliases já em uso (principal + joins), garantindo unicidade
+function computeAliases() {
+  const used = {};
+  const map = {};
+  if (state.from) {
+    let a = aliasFor(state.from);
+    while (used[a]) a += '2';
+    used[a] = true;
+    map[state.from] = a;
+  }
+  state.joins.forEach(j => {
+    if (!j.table) return;
+    let a = aliasFor(j.table);
+    while (used[a]) a += '2';
+    used[a] = true;
+    map[j.table] = a;
+  });
+  return map;
+}
+
+// Lista de colunas disponíveis para os seletores, já formatadas
+// (com prefixo de alias quando há JOIN ativo)
+function availableColumns() {
+  const cols = [];
+  const hasJoins = state.joins.some(j => j.table);
+  const aliases = computeAliases();
+
+  if (state.from && database[state.from]) {
+    database[state.from].colunas.forEach(c => {
+      const raw = c.nome;
+      const display = hasJoins ? `${aliases[state.from]}.${raw}` : raw;
+      cols.push({ value: display, label: display, table: state.from });
+    });
+  }
+  state.joins.forEach(j => {
+    if (!j.table || !database[j.table]) return;
+    database[j.table].colunas.forEach(c => {
+      const display = `${aliases[j.table]}.${c.nome}`;
+      cols.push({ value: display, label: display, table: j.table });
+    });
+  });
+  return cols;
+}
+
+// Colunas/aliases que podem ser usadas em ORDER BY (inclui alias do SELECT)
+function orderableOptions() {
+  const cols = availableColumns().map(c => c.value);
+  state.select.forEach(s => { if (s.alias) cols.push(s.alias); });
+  return [...new Set(cols)];
+}
+
+function selectOptionsHTML(options, current, placeholder) {
+  let html = `<option value="">${placeholder || 'Selecione…'}</option>`;
+  options.forEach(o => {
+    const val = typeof o === 'string' ? o : o.value;
+    const label = typeof o === 'string' ? o : o.label;
+    html += `<option value="${escapeAttr(val)}" ${val === current ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+  });
+  return html;
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* -------------------------------------------------------------------- *
+ * 3. RENDER — TABS
+ * -------------------------------------------------------------------- */
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('is-active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('is-active'); btn.setAttribute('aria-selected','true');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('is-active'));
+    document.getElementById('view-' + btn.dataset.tab).classList.add('is-active');
+  });
+});
+
+/* -------------------------------------------------------------------- *
+ * 4. RENDER — FROM
+ * -------------------------------------------------------------------- */
+
+function renderFromOptions() {
+  const sel = document.getElementById('select-from');
+  const sections = [...new Set(tableList().map(t => t.secao))];
+  let html = '<option value="">Selecione uma tabela…</option>';
+  sections.forEach(sec => {
+    html += `<optgroup label="${escapeHtml(sec)}">`;
+    tableList().filter(t => t.secao === sec).forEach(t => {
+      html += `<option value="${t.key}" ${t.key === state.from ? 'selected' : ''}>${t.nomeReal}</option>`;
+    });
+    html += '</optgroup>';
+  });
+  sel.innerHTML = html;
+}
+
+function renderFromDetails() {
+  const box = document.getElementById('from-details');
+  if (!state.from || !database[state.from]) { box.hidden = true; return; }
+  const t = database[state.from];
+  box.hidden = false;
+  box.innerHTML = `
+    <h4>${t.nomeReal}</h4>
+    <div class="meta-row"><i class="fa-regular fa-clock"></i> Atualização: ${escapeHtml(t.frequencia)}</div>
+    <p>${escapeHtml(t.descricao)}</p>
+    <div class="usage-box"><b>Quando usar esta tabela?</b><br>${escapeHtml(t.quandoUsar)}</div>
+    <div class="col-list">${t.colunas.length
+      ? t.colunas.map(c => `<span class="col-chip" title="${escapeAttr(c.descricao)}">${c.nome}</span>`).join('')
+      : '<span class="col-chip">colunas não documentadas</span>'}</div>
+  `;
+}
+
+document.getElementById('select-from').addEventListener('change', e => {
+  state.from = e.target.value;
+  renderFromDetails();
+  renderAll(['select','join','where','groupby','having','orderby']);
+});
+
+/* -------------------------------------------------------------------- *
+ * 5. RENDER — SELECT
+ * -------------------------------------------------------------------- */
+
+function renderSelect() {
+  const list = document.getElementById('select-list');
+  const cols = availableColumns();
+  list.innerHTML = state.select.map(row => {
+    const funcOptions = isDateColumn(row.column) ? FUNCS.concat(DATE_FUNCS.map(d => ({ value: d.value, label: d.label }))) : FUNCS;
+    const df = dateFuncByValue(row.func);
+    return `
+    <div class="select-item">
+      <div class="item-row" data-id="${row.id}">
+        <select class="fn-select" data-field="func">${funcOptions.map(f => `<option value="${f.value}" ${f.value===row.func?'selected':''}>${f.label}</option>`).join('')}</select>
+        <select data-field="column">
+          ${row.func === 'COUNT_STAR' ? '' : selectOptionsHTML(cols, row.column, 'coluna…')}
+        </select>
+        <input class="alias-input" data-field="alias" type="text" placeholder="alias (opcional)" value="${escapeAttr(row.alias||'')}">
+        <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      ${df ? `<p class="tip date-func-hint"><i class="fa-regular fa-calendar"></i> <b>${df.label}:</b> ${df.hint}</p>` : ''}
+    </div>`;
+  }).join('') || '<p class="hint">Nenhuma coluna adicionada ainda.</p>';
+
+  list.querySelectorAll('.item-row').forEach(rowEl => {
+    const id = rowEl.dataset.id;
+    const row = state.select.find(r => r.id === id);
+    rowEl.querySelector('[data-field="func"]').addEventListener('change', e => {
+      row.func = e.target.value;
+      if (row.func === 'COUNT_STAR') row.column = '*';
+      renderSelect(); renderQuery();
+    });
+    const colSel = rowEl.querySelector('[data-field="column"]');
+    if (colSel) colSel.addEventListener('change', e => {
+      row.column = e.target.value;
+      if (dateFuncByValue(row.func) && !isDateColumn(row.column)) row.func = '';
+      renderSelect(); renderQuery(); renderOrderBy();
+    });
+    rowEl.querySelector('[data-field="alias"]').addEventListener('input', e => { row.alias = e.target.value; renderQuery(); renderOrderBy(); });
+    rowEl.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      state.select = state.select.filter(r => r.id !== id);
+      renderSelect(); renderQuery(); renderOrderBy();
+    });
+  });
+}
+
+document.getElementById('btn-add-select').addEventListener('click', () => {
+  state.select.push({ id: uid(), column: '', func: '', alias: '' });
+  renderSelect(); renderQuery();
+});
+
+/* -------------------------------------------------------------------- *
+ * 6. RENDER — JOIN
+ * -------------------------------------------------------------------- */
+
+function joinableTables() {
+  return tableList().filter(t => t.key !== state.from);
+}
+
+function renderJoin() {
+  const list = document.getElementById('join-list');
+  list.innerHTML = state.joins.map(row => {
+    const mainCols = state.from && database[state.from] ? database[state.from].colunas.map(c => c.nome) : [];
+    const secCols = row.table && database[row.table] ? database[row.table].colunas.map(c => c.nome) : [];
+    return `
+    <div class="item-row" data-id="${row.id}">
+      <select class="fn-select" data-field="type">
+        <option value="INNER JOIN" ${row.type==='INNER JOIN'?'selected':''}>INNER JOIN</option>
+        <option value="LEFT JOIN" ${row.type==='LEFT JOIN'?'selected':''}>LEFT JOIN</option>
+      </select>
+      <select data-field="table">${selectOptionsHTML(joinableTables().map(t=>({value:t.key,label:t.nomeReal})), row.table, 'tabela secundária…')}</select>
+      <select data-field="colMain">${selectOptionsHTML(mainCols, row.colMain, 'coluna da tabela principal…')}</select>
+      <span class="hint" style="align-self:center;">=</span>
+      <select data-field="colJoin">${selectOptionsHTML(secCols, row.colJoin, 'coluna da tabela secundária…')}</select>
+      <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+    </div>`;
+  }).join('') || '<p class="hint">Nenhum JOIN adicionado — desativado por padrão.</p>';
+
+  list.querySelectorAll('.item-row').forEach(rowEl => {
+    const id = rowEl.dataset.id;
+    const row = state.joins.find(r => r.id === id);
+    ['type','table','colMain','colJoin'].forEach(field => {
+      const el = rowEl.querySelector(`[data-field="${field}"]`);
+      el.addEventListener('change', e => {
+        row[field] = e.target.value;
+        if (field === 'table') { row.colJoin = ''; }
+        renderJoin(); renderQuery(); renderSelect(); renderWhere(); renderGroupBy(); renderHaving(); renderOrderBy();
+      });
+    });
+    rowEl.querySelector('[data-action="remove"]').addEventListener('click', () => {
+      state.joins = state.joins.filter(r => r.id !== id);
+      renderJoin(); renderQuery(); renderSelect(); renderWhere(); renderGroupBy(); renderHaving(); renderOrderBy();
+    });
+  });
+}
+
+document.getElementById('btn-add-join').addEventListener('click', () => {
+  state.joins.push({ id: uid(), type: 'LEFT JOIN', table: '', colMain: '', colJoin: '' });
+  renderJoin(); renderQuery();
+});
+
+/* -------------------------------------------------------------------- *
+ * 7. RENDER — WHERE / HAVING (compartilham boa parte da lógica)
+ * -------------------------------------------------------------------- */
+
+function needsValue(op) { return op !== 'IS NULL' && op !== 'IS NOT NULL'; }
+
+function valuePlaceholder(op) {
+  if (op === 'IN' || op === 'NOT IN') return "12, 15, 20";
+  if (op === 'BETWEEN') return "'2026-09-01' AND '2026-09-30'";
+  if (op === 'LIKE' || op === 'NOT LIKE') return "%INTER%";
+  return "valor";
+}
+
+function renderWhere() {
+  const list = document.getElementById('where-list');
+  const cols = availableColumns();
+  list.innerHTML = state.where.map((row, idx) => `
+    <div class="item-row" data-id="${row.id}">
+      <select data-field="column">${selectOptionsHTML(cols, row.column, 'coluna…')}</select>
+      <select class="fn-select" data-field="operator">${OPERATORS.map(op=>`<option value="${op}" ${op===row.operator?'selected':''}>${op}</option>`).join('')}</select>
+      ${needsValue(row.operator) ? `<input data-field="value" type="text" placeholder="${valuePlaceholder(row.operator)}" value="${escapeAttr(row.value||'')}">` : ''}
+      <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+      ${idx < state.where.length - 1 ? `
+      <select class="connector-select" data-field="connector">
+        <option value="AND" ${row.connector==='AND'?'selected':''}>AND</option>
+        <option value="OR" ${row.connector==='OR'?'selected':''}>OR</option>
+      </select>` : ''}
+    </div>
+  `).join('') || '<p class="hint">Nenhuma condição adicionada.</p>';
+
+  bindConditionRows(list, state.where, renderWhere);
+}
+
+function renderHaving() {
+  const list = document.getElementById('having-list');
+  const cols = availableColumns();
+  const colsWithStar = [{ value: '*', label: '*' }, ...cols];
+  list.innerHTML = state.having.map((row, idx) => `
+    <div class="item-row" data-id="${row.id}">
+      <select class="fn-select" data-field="func">${FUNCS.map(f => `<option value="${f.value}" ${f.value===row.func?'selected':''}>${f.label}</option>`).join('')}</select>
+      <select data-field="column" ${row.func==='COUNT_STAR' ? 'disabled' : ''}>${selectOptionsHTML(colsWithStar, row.column, 'coluna…')}</select>
+      <select class="fn-select" data-field="operator">${OPERATORS.filter(o=>o!=='IS NULL' && o!=='IS NOT NULL').map(op=>`<option value="${op}" ${op===row.operator?'selected':''}>${op}</option>`).join('')}</select>
+      <input data-field="value" type="text" placeholder="100" value="${escapeAttr(row.value||'')}">
+      <button class="btn-remove" data-action="remove"><i class="fa-solid fa-xmark"></i></button>
+      ${idx < state.having.length - 1 ? `
+      <select class="connector-select" data-field="connector">
+        <option value="AND" ${row.connector==='AND'?'selected':''}>AND</option>
+        <option value="OR" ${row.connector==='OR'?'selected':''}>OR</option>
+      </select>` : ''}
+    </div>
+  `).join('') || '<p class="hint">Nenhuma condição adicionada.</p>';
